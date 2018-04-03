@@ -325,7 +325,7 @@ if ( !  -r "$DBDIR/kingdom/$kingdom/sprot.pin" or ! "$DBDIR/hmm/HAMAP.hmm.h3i") 
 # check options
 
 my $in = shift @ARGV or err("Please supply a contig FASTA file on the command line.");
-(-r $in and !-d _ and -s _) or err("'$in' is not a readable non-empty FASTA file");
+(-r $in and !-d _ and (-s _ or -p _)) or err("'$in' is not a readable non-empty FASTA file");
 $locustag ||= generate_locus_tag($in);
 
 if ($compliant) {
