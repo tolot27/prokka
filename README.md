@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/tseemann/prokka.svg?branch=master)](https://travis-ci.org/tseemann/prokka) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [](#lang-au)
+[![Build Status](https://travis-ci.org/tseemann/prokka.svg?branch=master)](https://travis-ci.org/tseemann/prokka) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [](#lang-au) [![DOI:10.1093/bioinformatics/btu153](https://zenodo.org/badge/DOI/10.1093/bioinformatics/btu153.svg)](https://doi.org/10.1093/bioinformatics/btu153) ![Don't judge me](https://img.shields.io/badge/Language-Perl_5-steelblue.svg)
 
 # Prokka: rapid prokaryotic genome annotation  
 
@@ -15,14 +15,14 @@ viral genomes quickly and produce standards-compliant output files.
 If you are using the [MacOS Brew](http://brew.sh/) 
 or [LinuxBrew](http://brew.sh/linuxbrew/) packaging system:
 ```
-brew install brewsci/science/prokka
+brew install brewsci/bio/prokka
 ```
 
 ### Bioconda
 If you use [Conda](https://conda.io/docs/install/quick.html)
 you can use the [Bioconda channel](https://bioconda.github.io/):
 ```
-conda install -c bioconda -c conda-forge prokka
+conda install -c conda-forge -c bioconda prokka
 ```
 
 ### Ubuntu/Debian/Mint
