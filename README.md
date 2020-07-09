@@ -1,4 +1,7 @@
-[![Build Status](https://travis-ci.org/tseemann/prokka.svg?branch=master)](https://travis-ci.org/tseemann/prokka) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [](#lang-au) [![DOI:10.1093/bioinformatics/btu153](https://zenodo.org/badge/DOI/10.1093/bioinformatics/btu153.svg)](https://doi.org/10.1093/bioinformatics/btu153) ![Don't judge me](https://img.shields.io/badge/Language-Perl_5-steelblue.svg)
+[![Build Status](https://travis-ci.org/tseemann/prokka.svg?branch=master)](https://travis-ci.org/tseemann/prokka)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![DOI:10.1093/bioinformatics/btu153](https://zenodo.org/badge/DOI/10.1093/bioinformatics/btu153.svg)](https://doi.org/10.1093/bioinformatics/btu153)
+![Don't judge me](https://img.shields.io/badge/Language-Perl_5-steelblue.svg)
 
 # Prokka: rapid prokaryotic genome annotation  
 
@@ -11,6 +14,13 @@ viral genomes quickly and produce standards-compliant output files.
 
 ## Installation
 
+### Bioconda
+If you use [Conda](https://conda.io/docs/install/quick.html)
+you can use the [Bioconda channel](https://bioconda.github.io/):
+```
+conda install -c conda-forge -c bioconda -c defaults prokka
+```
+
 ### Brew
 If you are using the [MacOS Brew](http://brew.sh/) 
 or [LinuxBrew](http://brew.sh/linuxbrew/) packaging system:
@@ -18,11 +28,18 @@ or [LinuxBrew](http://brew.sh/linuxbrew/) packaging system:
 brew install brewsci/bio/prokka
 ```
 
-### Bioconda
-If you use [Conda](https://conda.io/docs/install/quick.html)
-you can use the [Bioconda channel](https://bioconda.github.io/):
+### Docker
+Maintained by https://hub.docker.com/u/staphb
 ```
-conda install -c conda-forge -c bioconda prokka
+
+docker pull staphb/prokka:latest
+docker run staphb/prokka:latest prokka -h
+```
+
+### Singularity
+```
+singularity build prokka.sif docker://staphb/prokka:latest
+singularity exec prokka.sif prokka -h
 ```
 
 ### Ubuntu/Debian/Mint
@@ -50,7 +67,7 @@ $HOME/prokka/bin/prokka --setupdb
 
 ## Test
 
-* Type `prokka` and it should output it's help screen.
+* Type `prokka` and it should output its help screen.
 * Type `prokka --version` and you should see an output like `prokka 1.x`
 * Type `prokka --listdb` and it will show you what databases it has installed to use.
 
@@ -133,9 +150,11 @@ $HOME/prokka/bin/prokka --setupdb
     -g linear -c PROK -n 11 -f PRJEB12345/EHEC-Chr1.embl \
     "Escherichia coli" 562 PRJEB12345 "Escherichia coli strain EHEC" PRJEB12345/EHEC-Chr1.gff
 
-# Download and run the EMBL validator prior to submitting the EMBL flat file
-% curl -L -O ftp://ftp.ebi.ac.uk/pub/databases/ena/lib/embl-client.jar
-% java -jar embl-client.jar -r PRJEB12345/EHEC-Chr1.embl
+# Download and run the latest EMBL validator prior to submitting the EMBL flat file
+# from http://central.maven.org/maven2/uk/ac/ebi/ena/sequence/embl-api-validator/
+# which at the time of writing is v1.1.129
+% curl -L -O http://central.maven.org/maven2/uk/ac/ebi/ena/sequence/embl-api-validator/1.1.129/embl-api-validator-1.1.129.jar
+% java -jar embl-api-validator-1.1.129.jar -r PRJEB12345/EHEC-Chr1.embl
 
 # Compress the file ready to upload to ENA, and calculate MD5 checksum
 % gzip PRJEB12345/EHEC-Chr1.embl
@@ -178,7 +197,6 @@ $HOME/prokka/bin/prokka --setupdb
     General:
       --help            This help
       --version         Print version and exit
-      --docs            Show full manual/documentation
       --citation        Print citation for referencing Prokka
       --quiet           No screen output (default OFF)
       --debug           Debug mode: keep all temporary files (default OFF)
@@ -205,6 +223,7 @@ $HOME/prokka/bin/prokka --setupdb
     Annotations:
       --kingdom [X]     Annotation mode: Archaea|Bacteria|Mitochondria|Viruses (default 'Bacteria')
       --gcode [N]       Genetic code / Translation table (set if --kingdom is set) (default '0')
+      --prodigaltf [X]  Prodigal training file (default '')
       --gram [X]        Gram: -/neg +/pos (default '')
       --usegenus        Use genus-specific BLAST databases (needs --genus) (default OFF)
       --proteins [X]    Fasta file of trusted proteins to first annotate from (default '')
@@ -235,6 +254,13 @@ use of Genbank is recommended over FASTA, because it will provide `/gene`
 and `/EC_number` annotations that a typical `.faa` file will not provide, unless
 you have specially formatted it for Prokka.
 
+### Option: --prodigaltf
+
+Instead of letting `prodigal` train its gene model on the contigs you
+provide, you can pre-train it on some good closed reference genomes first
+using the `prodigal -t` option. Once you've done that, provide `prokka`
+the training file using the `--prodgialtf` option.
+
 ### Option: --rawproduct
 
 Prokka annotates proteins by using sequence similarity to other proteins in its database,
@@ -262,11 +288,20 @@ BLAST+.  This combination of small database and fast search typically
 completes about 70% of the workload.  Then a series of slower but more
 sensitive HMM databases are searched using HMMER3.
 
-The initial core databases are derived from UniProtKB; there is one per
-"kingdom" supported.  To qualify for inclusion, a protein must be (1) from
-Bacteria (or Archaea or Viruses); (2) not be "Fragment" entries; and (3)
-have an evidence level ("PE") of 2 or lower, which corresponds to
-experimental mRNA or proteomics evidence.
+The three core databases, applied in order, are:
+
+1. [ISfinder](https://isfinder.biotoul.fr/):
+Only the tranposase (protein) sequences; the whole transposon is not annotated.
+
+2. [NCBI Bacterial Antimicrobial Resistance Reference Gene Database](https://www.ncbi.nlm.nih.gov/bioproject/313047):
+Antimicrobial resistance genes curated by NCBI.
+
+3. [UniProtKB (SwissProt)](https://www.uniprot.org/uniprot/?query=reviewed:yes): 
+For each `--kingdom` we include curated proteins with evidence that
+(i) from Bacteria (or Archaea or Viruses);
+(ii) not be "Fragment" entries;
+and (iii) have an evidence level ("PE") of 2 or lower, which
+corresponds to experimental mRNA or proteomics evidence.
 
 #### Making a Core Databases
 
@@ -277,6 +312,8 @@ If you add new ones, the command `prokka --listdb` will show you whether it
 has been detected properly.
 
 #### The Genus Databases
+
+:warning: This is no longer recommended. Please use `--proteins` instead.
 
 If you enable `--usegenus` and also provide a Genus via `--genus` then it
 will first use a BLAST database which is Genus specific.  Prokka comes with
@@ -366,7 +403,7 @@ There is no clear reason for this.  The only way to restore normal behaviour
 is to edit the prokka script and change `parallel` to `parallel --gnu`.
 
 * __Why does prokka fail when it gets to hmmscan?__  
-Unfortunately HMMER keeps changing it's database format, and they aren't
+Unfortunately HMMER keeps changing its database format, and they aren't
 upward compatible.  If you upgraded HMMER (from 3.0 to 3.1 say) then you
 need to "re-press" the files.  This can be done as follows:
 ```
@@ -387,6 +424,11 @@ in Prokka and it will rename all your contigs to be NCBI (and Mauve)
 compliant. It does not like the ACCESSION and VERSION strings that Prokka
 produces via the "tbl2asn" tool. The following Unix command will fix them:
 `egrep -v '^(ACCESSION|VERSION)' prokka.gbk > mauve.gbk`
+
+* __How can I make my GFF not have the contig sequences in it?__
+```
+sed '/^##FASTA/Q' prokka.gff > nosequence.gff
+```
 
 ## Bugs
 

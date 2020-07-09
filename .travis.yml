@@ -1,12 +1,13 @@
-language: perl
+dist: bionic
 
-sudo: false
+addons:
+    apt:
+        packages:
+            - libdb-dev
+            - libbio-perl-perl
+            - libxml-simple-perl
 
-perl:
-    - "5.26"
-    
 install:
-    - "cpanm --quiet --notest Time::Piece XML::Simple Digest::MD5 Bio::Perl"
     - "export PATH=$PWD/bin:$PATH"
 
 script:
